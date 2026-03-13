@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Edison Judge Station - Millennium Final</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://www.yugioh-card.com/en/wp-content/uploads/2022/11/judge-logo_2022.png">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Spectral+SC:wght@500;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --ygo-gold: #d4af37;
+            --ygo-gold-bright: #fff380;
+            --bg-dark: #05050a;
+            --terminal-green: #33ff33;
+            --damage-red: #ff3333;
+            --font-ygi: 'Cinzel Decorative', cursive;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Spectral SC', serif;
+            background-color: var(--bg-dark);
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), 
+                url('https://img.freepik.com/premium-photo/ancient-egyptian-hieroglyphs-stone-wall_116124-10024.jpg?w=1480');
+            background-size: cover; color: #e0e0e0; 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        header { padding: 5px; text-align: center; border-bottom: 3px solid var(--ygo-gold); background: rgba(0,0,0,0.95); z-index: 100; }
+        h1 { margin: 0; font-family: var(--font-ygi); color: var(--ygo-gold-bright); font-size: 1rem; }
+
+        .main-layout { display: grid; grid-template-columns: 380px 1fr; flex: 1; height: calc(100vh - 45px); }
+
+        #bot-panel {
+            position: relative; border-right: 6px solid var(--ygo-gold); border-bottom: 6px solid var(--ygo-gold);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 25px; background-color: #111; background-size: cover; background-position: center;
+        }
+        #bot-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1; }
+        .judge-content { position: relative; z-index: 2; width: 100%; }
+        .judge-logo { width: 85%; max-width: 260px; filter: drop-shadow(0 0 15px gold); margin-bottom: 40px; }
+        .btn-summon {
+            font-family: var(--font-ygi); background: radial-gradient(circle, #e6b800, #b8860b, #4b3621);
+            color: #fff; border: 4px solid var(--ygo-gold-bright); padding: 25px 40px; font-size: 1.3rem;
+            cursor: pointer; border-radius: 60px; box-shadow: 0 0 20px var(--ygo-gold); text-shadow: 2px 2px #000; transition: 0.3s;
+        }
+        .btn-summon:hover { transform: scale(1.05); filter: brightness(1.2); }
+
+        .settings-icon {
+            position: absolute; bottom: 10px; left: 10px; z-index: 3;
+            cursor: pointer; opacity: 0.2; transition: opacity 0.3s;
+        }
+        .settings-icon:hover { opacity: 0.5; }
+        .settings-icon svg { width: 20px; height: 20px; fill: var(--ygo-gold); }
+
+        .duel-tools-panel { 
+            background-color: rgba(0,0,0,0.5); border-bottom: 6px solid var(--ygo-gold);
+            display: flex; flex-direction: column; padding: 10px; gap: 8px; overflow: hidden;
+        }
+
+        .timer-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(10,10,10,0.95); padding: 6px 15px; border: 1px solid var(--ygo-gold); border-radius: 8px;
+        }
+        #timer-display { font-family: var(--font-ygi); font-size: 1.4rem; color: var(--ygo-gold-bright); }
+        .timer-controls button { padding: 4px 10px; font-size: 0.8rem; background: #222; color: #fff; border: 1px solid var(--ygo-gold); border-radius: 4px; }
+
+        .players-lp-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1.2; }
+        .tool-card { 
+            background: rgba(15, 15, 15, 0.95); border: 3px solid var(--ygo-gold); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-radius: 12px; transition: 0.2s; cursor: pointer;
+        }
+        .tool-card.active { border-color: white; box-shadow: inset 0 0 20px rgba(255,255,255,0.2); }
+        .lp-display { font-family: var(--font-ygi); font-size: 4rem; text-shadow: 0 0 25px currentColor; line-height: 1; }
+        .player-label { font-size: 0.9rem; color: var(--ygo-gold); font-family: var(--font-ygi); margin-bottom: 8px; }
+
+        .numpad-section { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 5px; }
+        .input-preview {
+            background: #000; color: var(--ygo-gold-bright); font-family: var(--font-ygi);
+            font-size: 1.5rem; padding: 6px; border: 2px solid var(--ygo-gold); text-align: center; border-radius: 6px;
+        }
+        .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex: 1; }
+        .numpad-btn {
+            background: linear-gradient(#333, #111); color: var(--ygo-gold-bright);
+            border: 1px solid #444; font-size: 1.3rem; font-family: var(--font-ygi); border-radius: 6px;
+        }
+        .numpad-btn:active { background: var(--ygo-gold); color: #000; }
+        
+        .action-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .action-btn { font-size: 1.4rem; padding: 12px; font-weight: bold; border-radius: 6px; border: 1px solid #000; cursor: pointer; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); display: none; justify-content: center;
+            align-items: center; z-index: 2000; flex-direction: column;
+        }
+        .rolling { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(10deg); } 50% { transform: rotate(-10deg); } 100% { transform: rotate(0deg); } }
+
+        /* --- MOBILE ADAPTATION --- */
+        @media (max-width: 850px) and (orientation: portrait) {
+            .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
+            #bot-panel { height: 320px; border-right: none; }
+            .lp-display { font-size: 3rem; }
+            .duel-tools-panel { overflow: visible; height: auto; }
+        }
+
+        /* ORIZZONTALE (LANDSCAPE) OTTIMIZZATO */
+        @media (max-height: 500px) and (orientation: landscape) {
+            header { display: none; } /* Nascondi header per guadagnare spazio verticale */
+            .main-layout { 
+                grid-template-columns: 220px 1fr; /* Pannello Judge più stretto */
+                height: 100vh; 
+            }
+            #bot-panel { padding: 10px; border-right: 3px solid var(--ygo-gold); }
+            .judge-logo { width: 50%; margin-bottom: 10px; }
+            .btn-summon { padding: 12px 20px; font-size: 0.9rem; border-width: 2px; }
+            
+            .duel-tools-panel { padding: 5px; gap: 4px; }
+            .timer-bar { padding: 2px 10px; border-radius: 4px; }
+            #timer-display { font-size: 1.1rem; }
+            
+            .players-lp-container { gap: 4px; }
+            .tool-card { border-width: 2px; border-radius: 6px; padding: 5px; }
+            .lp-display { font-size: 2.2rem; }
+            .player-label { font-size: 0.7rem; margin-bottom: 2px; }
+            .tool-card button { margin-top: 5px; padding: 2px 10px; font-size: 0.6rem; }
+            
+            .numpad-section { gap: 4px; padding: 2px; }
+            .input-preview { font-size: 1.1rem; padding: 2px; }
+            .numpad-grid { gap: 3px; }
+            .numpad-btn { font-size: 0.9rem; border-radius: 4px; }
+            .action-btn { padding: 8px; font-size: 1rem; border-radius: 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<header><h1>EDISON JUDGE STATION</h1></header>
+
+<div class="main-layout">
+    <aside id="bot-panel">
+        <div class="judge-content">
+            <img src="https://www.yugioh-card.com/en/wp-content/uploads/2022/11/judge-logo_2022.png" alt="Judge Logo" class="judge-logo">
+            <br>
+            <button class="btn-summon" onclick="openJudgeBot()">OPEN JUDGE BOT</button>
+        </div>
+        <label class="settings-icon" for="file-upload">
+            <svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/></svg>
+        </label>
+        <input type="file" id="file-upload" style="display:none" onchange="loadBg(event)">
+    </aside>
+
+    <main class="duel-tools-panel">
+        <div class="timer-bar">
+            <div id="timer-display">40:00</div>
+            <div class="timer-controls">
+                <button onclick="startTimer()">▶</button><button onclick="pauseTimer()">Ⅱ</button><button onclick="resetTimer()">↺</button>
+                <button onclick="resetLP()" style="color:red; border-color:red;">RESET</button>
+            </div>
+        </div>
+
+        <div class="players-lp-container">
+            <div id="card-p1" class="tool-card active" onclick="setActivePlayer(1)">
+                <div class="player-label">DUELIST 1</div>
+                <div id="lp1" class="lp-display" style="color: var(--terminal-green);">8000</div>
+                <button onclick="halveLP(1)" style="margin-top:5px; background:#400; color:white; border:none; padding:4px 10px; font-size:0.7rem;">LP/2</button>
+            </div>
+            <div id="card-p2" class="tool-card" onclick="setActivePlayer(2)">
+                <div class="player-label">DUELIST 2</div>
+                <div id="lp2" class="lp-display" style="color: var(--damage-red);">8000</div>
+                <button onclick="halveLP(2)" style="margin-top:5px; background:#400; color:white; border:none; padding:4px 10px; font-size:0.7rem;">LP/2</button>
+            </div>
+        </div>
+
+        <div class="numpad-section">
+            <div id="input-preview" class="input-preview">0</div>
+            <div class="numpad-grid">
+                <button class="numpad-btn" onclick="pressNum('1')">1</button><button class="numpad-btn" onclick="pressNum('2')">2</button><button class="numpad-btn" onclick="pressNum('3')">3</button>
+                <button class="numpad-btn" onclick="pressNum('4')">4</button><button class="numpad-btn" onclick="pressNum('5')">5</button><button class="numpad-btn" onclick="pressNum('6')">6</button>
+                <button class="numpad-btn" onclick="pressNum('7')">7</button><button class="numpad-btn" onclick="pressNum('8')">8</button><button class="numpad-btn" onclick="pressNum('9')">9</button>
+                <button class="numpad-btn" onclick="pressNum('0')">0</button><button class="numpad-btn" onclick="pressNum('00')">00</button><button class="numpad-btn" style="background:#500;" onclick="clearNum()">C</button>
+            </div>
+            <div class="action-row">
+                <button class="action-btn" style="background:#151; color:white;" onclick="applyOp(1)">+</button><button class="action-btn" style="background:#611; color:white;" onclick="applyOp(-1)">-</button>
+                <button class="action-btn" style="background:var(--ygo-gold); color:black;" onclick="rollDice()">🎲</button><button class="action-btn" style="background:var(--ygo-gold); color:black;" onclick="flipCoin()">🪙</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="modal" class="modal-overlay" onclick="this.style.display='none'">
+    <div id="modal-content" style="text-align:center;">
+        <div id="anim-box" style="font-family:var(--font-ygi); color:gold; font-size:8rem;"></div>
+        <div id="result-text" style="font-family:var(--font-ygi); color:white; font-size:2rem; margin-top:20px;"></div>
+    </div>
+</div>
+
+<script>
+    let lp = { 1: 8000, 2: 8000 };
+    let activePlayer = 1, currentInput = "", secondsLeft = 2400, timerInterval;
+
+    function setActivePlayer(p) {
+        activePlayer = p;
+        document.getElementById('card-p1').classList.toggle('active', p === 1);
+        document.getElementById('card-p2').classList.toggle('active', p === 2);
+    }
+    function pressNum(n) { if (currentInput.length < 5) { currentInput += n; document.getElementById('input-preview').innerText = currentInput; } }
+    function clearNum() { currentInput = ""; document.getElementById('input-preview').innerText = "0"; }
+    function applyOp(sign) {
+        const val = parseInt(currentInput);
+        if (!isNaN(val)) {
+            let start = lp[activePlayer];
+            lp[activePlayer] = Math.max(0, lp[activePlayer] + (val * sign));
+            animateLP(activePlayer, start, lp[activePlayer]);
+            clearNum();
+        }
+    }
+    function animateLP(p, start, end) {
+        let curr = start; const step = (end - start) / 10;
+        const interval = setInterval(() => {
+            curr += step; if ((step > 0 && curr >= end) || (step < 0 && curr <= end)) { curr = end; clearInterval(interval); }
+            document.getElementById('lp' + p).innerText = Math.round(curr);
+        }, 30);
+    }
+    function halveLP(p) { let start = lp[p]; lp[p] = Math.ceil(lp[p] / 2); animateLP(p, start, lp[p]); }
+    function resetLP() { lp = { 1: 8000, 2: 8000 }; document.getElementById('lp1').innerText = "8000"; document.getElementById('lp2').innerText = "8000"; clearNum(); }
+    function updateTimer() { let m = Math.floor(secondsLeft / 60), s = secondsLeft % 60; document.getElementById('timer-display').innerText = `${m}:${s.toString().padStart(2, '0')}`; }
+    function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { if(secondsLeft > 0) { secondsLeft--; updateTimer(); } }, 1000); }
+    function pauseTimer() { clearInterval(timerInterval); }
+    function resetTimer() { pauseTimer(); secondsLeft = 2400; updateTimer(); }
+    function rollDice() {
+        const modal = document.getElementById('modal'), box = document.getElementById('anim-box'), res = document.getElementById('result-text');
+        modal.style.display = 'flex'; box.innerText = "🎲"; box.classList.add('rolling'); res.innerText = "ROLLING...";
+        setTimeout(() => { box.classList.remove('rolling'); box.innerText = Math.floor(Math.random() * 6) + 1; res.innerText = "DICE ROLL"; }, 800);
+    }
+    function flipCoin() {
+        const modal = document.getElementById('modal'), box = document.getElementById('anim-box'), res = document.getElementById('result-text');
+        modal.style.display = 'flex'; box.innerText = "🪙"; box.classList.add('rolling'); res.innerText = "FLIPPING...";
+        setTimeout(() => { box.classList.remove('rolling'); const result = Math.random() > 0.5 ? "HEADS" : "TAILS"; box.innerText = result === "HEADS" ? "H" : "T"; res.innerText = result; }, 800);
+    }
+    function openJudgeBot() { window.open("https://notebooklm.google.com/notebook/61ad4abe-21d0-40b3-bcac-a9f0b0c4bb8f", "_blank"); }
+    function loadBg(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => { document.getElementById('bot-panel').style.backgroundImage = `url('${event.target.result}')`; localStorage.setItem('solemnBg', event.target.result); };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+    window.onload = () => {
+        const saved = localStorage.getItem('solemnBg');
+        if (saved) document.getElementById('bot-panel').style.backgroundImage = `url('${saved}')`;
+        updateTimer();
+    };
+</script>
+</body>
+</html>
